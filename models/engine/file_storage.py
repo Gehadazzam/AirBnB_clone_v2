@@ -29,46 +29,36 @@ class FileStorage:
 
     def all(self, cls=None):
         """Returns a dictionary of models currently in storage"""
-        if not cls:
-            return self.__objects
-        elif type(cls) == str:
-            return {
-                k: v for k, v in self.__objects.items() if (
-                    v.__class__.__name__ == cls
-                )
-            }
-        else:
-            return {
-                k: v for k, v in self.__objects.items() if (
-                    v.__class__ == cls
-                )
-            }
+        dict = {}
+        if cls is not None:
+            for k, v in self.__objects.items():
+                if isinstance(v, cls):
+                    dict[k] = v
+            return dict
+
+        return FileStorage.__objects
 
     def new(self, obj):
         """Adds new object to storage dictionary"""
-        if obj is not None:
-            k = "{}.{}".format(
-                    obj.__class__.__name__, obj.id
-                )
-            self.__objects[k] = obj
+        self.all().update({obj.to_dict()['__class__'] + '.' + obj.id: obj})
 
     def save(self):
         """Saves storage dictionary to file"""
-        temp = {}
-        for k in self.__objects:
-            temp[k] = self.__objects[k].to_dict(
-                save_to_disk=True
-            )
-        with open(self.__file_path, "w") as f:
-            json.dump(temp, f)
+        with open(FileStorage.__file_path, 'w') as f:
+            new_dic = {}
+            new_dic.update(FileStorage.__objects)
+            for key, val in new_dic.items():
+                new_dic[key] = val.to_dict()
+            json.dump(new_dic, f)
 
     def reload(self):
         """Loads storage dictionary from file"""
         try:
-            with open(self.__file_path, "r") as f:
-                temp = json.load(f)
-            for k in temp:
-                self.__objects[k] = classes[temp[k]["__class__"]](**temp[k])
+            new_diction = {}
+            with open(FileStorage.__file_path, 'r') as f:
+                new_diction = json.load(f)
+                for key, val in new_diction.items():
+                    self.all()[key] = classes[val['__class__']](**val)
         except FileNotFoundError:
             pass
 
@@ -77,32 +67,3 @@ class FileStorage:
         if obj is not None:
             k = "{}.{}".format(obj.__class__.__name__, obj.id)
             del self.__objects[k]
-            self.save()
-
-    def close(self):
-        """Dispose of current session if active"""
-        self.reload()
-
-    def get(self, cls, id):
-        """get an object"""
-        if (
-            cls is not None
-            and type(cls) is str
-            and type(id) is str
-            and id is not None
-            and cls in classes
-        ):
-            k = "{}.{}".format(cls, id)
-            v = self.__objects.get(k, None)
-            return v
-        else:
-            return None
-
-    def count(self, cls=None):
-        """Count objects"""
-        n = 0
-        if type(cls) == str and cls in classes:
-            n = len(self.all(cls))
-        elif cls is None:
-            n = len(self.__objects)
-        return n
