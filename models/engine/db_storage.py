@@ -13,7 +13,7 @@ from models.amenity import Amenity
 from models.place import Place
 from models.review import Review
 
-classes = {
+DB_class = {
     "BaseModel": BaseModel,
     "User": User,
     "State": State,
@@ -46,27 +46,29 @@ class DBStorage:
 
     def all(self, cls=None):
         """query on the current database session (self.__session)"""
-        dict = {}
+        if not self.__session:
+            self.reload()
+        objects = {}
+        if type(cls) == str:
+            cls = DB_class.get(cls, None)
+        k = "{}.{}".format(obj.__class__.__name__, obj.id)
         if cls:
-            obj = self.__session.query(self.classes()[cls].all())
+            for obj in self.__session.query(cls):
+                objects[k] = obj
         else:
-            list_t = ['State', 'City', 'User', 'Place', 'Amenity', 'Review']
-            for i in list_t:
-                obj += self.__session.query(i).all()
-            for k in obj:
-                n = "{}.{}".format(k.__class__.__name__, k.id)
-                dict[n] = k
-        return dict
+            for cls in DB_class.values():
+                for obj in self.__session.query(cls):
+                    objects[k] = obj
+        return objects
 
     def reload(self):
         """inherit from Base must be imported before calling"""
-        Base.metadata.create_all(self.__engine)
-        self.__session = sessionmaker(
+        session_factory = sessionmaker(
             bind=self.__engine,
             expire_on_commit=False
         )
-        Session = scoped_session(self.__session)
-        self.__session = Session()
+        Base.metadata.create_all(self.__engine)
+        self.__session = scoped_session(session_factory)
 
     def new(self, obj):
         """add the object to the current database session"""
@@ -77,10 +79,34 @@ class DBStorage:
         self.__session.commit()
 
     def delete(self, obj=None):
-        """delete from the current database session obj if not None"""
+        if not self.__session:
+            self.reload()
         if obj:
             self.__session.delete(obj)
 
     def close(self):
-        """Dispose of current session if active"""
         self.__session.remove()
+
+    def get(self, cls, id):
+        if (
+            cls is not None
+            and type(cls) is str
+            and id is not None
+            and type(id) is str
+            and cls in DB_class
+        ):
+            cls = DB_class[cls]
+            result = self.__session.query(cls).filter(cls.id == id).first()
+            return result
+        else:
+            return None
+
+    def count(self, cls=None):
+        n = 0
+        if type(cls) == str and cls in DB_class:
+            cls = DB_class[cls]
+            n = self.__session.query(cls).count()
+        elif cls is None:
+            for cls in DB_class.values():
+                n += self.__session.query(cls).count()
+        return n

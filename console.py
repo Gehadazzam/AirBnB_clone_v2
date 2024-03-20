@@ -6,10 +6,9 @@ import re
 import os
 import uuid
 import json
-from os import getenv
 from datetime import datetime
-from models import storage
 from models.base_model import BaseModel
+from models.__init__ import storage
 from models.user import User
 from models.place import Place
 from models.state import State
@@ -64,15 +63,15 @@ class HBNBCommand(cmd.Cmd):
             pline = line[:]  # parsed line
 
             # isolate <class name>
-            _cls = pline[:pline.find(".")]
+            _cls = pline[: pline.find(".")]
 
             # isolate and validate <command>
-            _cmd = pline[pline.find(".") + 1:pline.find("(")]
+            _cmd = pline[pline.find(".") + 1: pline.find("(")]
             if _cmd not in HBNBCommand.dot_cmds:
                 raise Exception
 
             # if parantheses contain arguments, parse them
-            pline = pline[pline.find("(") + 1:pline.find(")")]
+            pline = pline[pline.find("(") + 1: pline.find(")")]
             if pline:
                 # partition args: (<id>, [<delim>], [<*args>])
                 pline = pline.partition(", ")  # pline convert to tuple
@@ -138,9 +137,9 @@ class HBNBCommand(cmd.Cmd):
         Command syntax: create <Class name> <param 1> <param 2> <param 3>...
         Param syntax: <key name>=<value>
         """
-        list = ("id", "created_at", "updated_at", "__class__")
+        list = ["id", "created_at", "updated_at", "__class__"]
         class_name = ""
-        name_pat = r'(?P<name>(?:[a-zA-Z]|_)(?:[a-zA-Z]|\d|_)*)'
+        name_pat = r"(?P<name>(?:[a-zA-Z]|_)(?:[a-zA-Z]|\d|_)*)"
         class_match = re.match(name_pat, args)
         kwargs_dic = {}
         if class_match is None:
@@ -150,31 +149,33 @@ class HBNBCommand(cmd.Cmd):
             string_par = args[len(class_name):].strip()
             par = string_par.split(" ")
             str_pat = r'(?P<str_p>"([^"]|\")*")'
-            float_pat = r'(?P<float_p>[-+]?\d+\.\d+)'
-            int_pat = r'(?P<int_p>[-+]?\d+)'
+            float_pat = r"(?P<float_p>[-+]?\d+\.\d+)"
+            int_pat = r"(?P<int_p>[-+]?\d+)"
             par_pat = "{}=({}|{}|{})".format(
                 name_pat, str_pat, float_pat, int_pat
             )
             for i in par:
                 par_full_match = re.fullmatch(par_pat, i)
-                if par_full_match is not None:
-                    k_name = par_full_match.group("name")
+                if par_full_match:
+                    key_name = par_full_match.group("name")
                     value_s = par_full_match.group("str_p")
                     value_f = par_full_match.group("float_p")
                     value_i = par_full_match.group("int_p")
-                    if value_s is not None:
-                        kwargs_dic[k_name] = value_s[1:-1].replace("_", " ")
-                    if value_f is not None:
-                        kwargs_dic[k_name] = float(value_f)
-                    if value_i is not None:
-                        kwargs_dic[k_name] = int(value_i)
+                    if value_s:
+                        kwargs_dic[key_name] = value_s[1:-1].replace("_", " ")
+                    elif value_f:
+                        kwargs_dic[key_name] = float(value_f)
+                    elif value_i:
+                        kwargs_dic[key_name] = int(value_i)
+
         if not class_name:
             print("** class name missing **")
             return
         elif class_name not in HBNBCommand.classes:
             print("** class doesn't exist **")
             return
-        if getenv("HBNB_TYPE_STORAGE") == "db":
+
+        if os.getenv("HBNB_TYPE_STORAGE") == "db":
             if not hasattr(kwargs_dic, "id"):
                 kwargs_dic["id"] = str(uuid.uuid4())
             if not hasattr(kwargs_dic, "created_at"):
@@ -229,7 +230,7 @@ class HBNBCommand(cmd.Cmd):
 
         key = c_name + "." + c_id
         try:
-            print(storage.all()[key])
+            print(storage._FileStorage__objects[key])
         except KeyError:
             print("** no instance found **")
 
@@ -261,7 +262,7 @@ class HBNBCommand(cmd.Cmd):
         key = c_name + "." + c_id
 
         try:
-            storage.delete(storage.all()[key])
+            del storage.all()[key]
             storage.save()
         except KeyError:
             print("** no instance found **")
@@ -280,11 +281,11 @@ class HBNBCommand(cmd.Cmd):
             if args not in HBNBCommand.classes:
                 print("** class doesn't exist **")
                 return
-            for k, v in storage.all().items():
+            for k, v in storage._FileStorage__objects.items():
                 if k.split(".")[0] == args:
                     print_list.append(str(v))
         else:
-            for k, v in storage.all().items():
+            for k, v in storage._FileStorage__objects.items():
                 print_list.append(str(v))
 
         print(print_list)
@@ -297,7 +298,7 @@ class HBNBCommand(cmd.Cmd):
     def do_count(self, args):
         """Count current number of class instances"""
         count = 0
-        for k, v in storage.all().items():
+        for k, v in storage._FileStorage__objects.items():
             if args == k.split(".")[0]:
                 count += 1
         print(count)
@@ -338,11 +339,7 @@ class HBNBCommand(cmd.Cmd):
             return
 
         # first determine if kwargs or args
-        if (
-            "{" in args[2]
-            and "}" in args[2]
-            and type(eval(args[2])) is dict
-        ):
+        if "{" in args[2] and "}" in args[2] and type(eval(args[2])) is dict:
             kwargs = eval(args[2])
             args = []  # reformat kwargs into list, ex: [<name>, <value>, ...]
             for k, v in kwargs.items():
@@ -350,8 +347,8 @@ class HBNBCommand(cmd.Cmd):
                 args.append(v)
         else:  # isolate args
             args = args[2]
-            if args and args[0] == '\"':  # check for quoted arg
-                second_quote = args.find('\"', 1)
+            if args and args[0] == '"':  # check for quoted arg
+                second_quote = args.find('"', 1)
                 att_name = args[1:second_quote]
                 args = args[second_quote + 1:]
 
@@ -361,8 +358,8 @@ class HBNBCommand(cmd.Cmd):
             if not att_name and args[0] != " ":
                 att_name = args[0]
             # check for quoted val arg
-            if args[2] and args[2][0] == '\"':
-                att_val = args[2][1:args[2].find('\"', 1)]
+            if args[2] and args[2][0] == '"':
+                att_val = args[2][1: args[2].find('"', 1)]
 
             # if att_val was not quoted arg
             if not att_val and args[2]:
