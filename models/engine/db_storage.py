@@ -23,7 +23,6 @@ classes = {
     "Review": Review
 }
 
-
 class DBStorage:
     """New engine DBStorage: (models/engine/db_storage.py)"""
 
