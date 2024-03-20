@@ -56,9 +56,9 @@ class FileStorage:
         """Saves storage dictionary to file"""
         temp = {}
         for k in self.__objects:
-                temp[k] = self.__objects[k].to_dict(
-                    save_to_disk=True
-                )
+            temp[k] = self.__objects[k].to_dict(
+                save_to_disk=True
+            )
         with open(self.__file_path, "w") as f:
             json.dump(temp, f)
 
@@ -69,7 +69,7 @@ class FileStorage:
                 temp = json.load(f)
             for k in temp:
                 self.__objects[k] = classes[temp[k]["__class__"]](**temp[k])
-        except:
+        except FileNotFoundError:
             pass
 
     def delete(self, obj=None):
@@ -86,10 +86,10 @@ class FileStorage:
     def get(self, cls, id):
         """get an object"""
         if (
-            cls is not None\
-            and type(cls) is str\
-            and type(id) is str\
-            and id is not None\
+            cls is not None
+            and type(cls) is str
+            and type(id) is str
+            and id is not None
             and cls in classes
         ):
             k = "{}.{}".format(cls, id)

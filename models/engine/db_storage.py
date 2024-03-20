@@ -93,10 +93,10 @@ class DBStorage:
     def get(self, cls, id):
         """get an object"""
         if (
-            cls is not None\
-            and type(cls) is str\
-            and type(id) is str\
-            and id is not None\
+            cls is not None
+            and type(cls) is str
+            and type(id) is str
+            and id is not None
             and cls in DB_class
         ):
             cls = DB_class[cls]
