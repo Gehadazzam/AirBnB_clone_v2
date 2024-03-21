@@ -5,25 +5,20 @@ Contains the FileStorage class
 
 import json
 from models.amenity import Amenity
-from models.base_model import BaseModel, Base
+from models.base_model import BaseModel
 from models.city import City
 from models.place import Place
 from models.review import Review
 from models.state import State
 from models.user import User
 
+classes = {"Amenity": Amenity, "BaseModel": BaseModel, "City": City,
+           "Place": Place, "Review": Review, "State": State, "User": User}
+
 
 class FileStorage:
     """serializes instances to a JSON file & deserializes back to instances"""
-    classes = {
-        "Amenity": Amenity,
-        "BaseModel": BaseModel,
-        "City": City,
-        "Place": Place,
-        "Review": Review,
-        "State": State,
-        "User": User
-    }
+
     __file_path = "file.json"
     __objects = {}
 
@@ -32,35 +27,25 @@ class FileStorage:
         if not cls:
             return self.__objects
         elif type(cls) == str:
-            return {
-                k: v for k, v in self.__objects.items() if (
-                    v.__class__.__name__ == cls
-                )
-            }
+            return {k: v for k, v in self.__objects.items()
+                    if v.__class__.__name__ == cls}
         else:
-            return {
-                k: v for k, v in self.__objects.items() if (
-                    v.__class__ == cls
-                )
-            }
+            return {k: v for k, v in self.__objects.items()
+                    if v.__class__ == cls}
 
     def new(self, obj):
         """sets in __objects the obj with key <obj class name>.id"""
         if obj is not None:
-            k = "{}.{}".format(
-                obj.__class__.__name__, obj.id
-            )
-            self.__objects[k] = obj
+            key = obj.__class__.__name__ + "." + obj.id
+            self.__objects[key] = obj
 
     def save(self):
         """serializes __objects to the JSON file (path: __file_path)"""
-        j_obj = {}
+        json_objects = {}
         for key in self.__objects:
-            j_obj[key] = self.__objects[key].to_dict(
-                save_to_disk=True
-            )
+            json_objects[key] = self.__objects[key].to_dict(save_to_disk=True)
         with open(self.__file_path, 'w') as f:
-            json.dump(j_obj, f)
+            json.dump(json_objects, f)
 
     def reload(self):
         """deserializes the JSON file to __objects"""
@@ -75,9 +60,7 @@ class FileStorage:
     def delete(self, obj=None):
         """delete obj from __objects if it’s inside"""
         if obj is not None:
-            del self.__objects[
-                "{}.{}".format(obj.__class__.__name__, obj.id)
-            ]
+            del self.__objects[obj.__class__.__name__ + '.' + obj.id]
             self.save()
 
     def close(self):
@@ -85,7 +68,7 @@ class FileStorage:
         self.reload()
 
     def get(self, cls, id):
-        """get an object"""
+        """Retrieve an object"""
         if cls is not None and type(cls) is str and id is not None and\
            type(id) is str and cls in classes:
             key = cls + '.' + id
@@ -95,10 +78,10 @@ class FileStorage:
             return None
 
     def count(self, cls=None):
-        """Count"""
-        t = 0
+        """Count number of objects in storage"""
+        total = 0
         if type(cls) == str and cls in classes:
-            t = len(self.all(cls))
+            total = len(self.all(cls))
         elif cls is None:
-            t = len(self.__objects)
-        return t
+            total = len(self.__objects)
+        return total
