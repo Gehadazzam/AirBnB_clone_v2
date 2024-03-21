@@ -15,18 +15,17 @@ from models.user import User
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 
-class_db = {
-    'Amenity': Amenity,
-    'City': City,
-    'Place': Place,
-    'State': State,
-    'Review': Review,
-    'User': User
-}
-
 
 class DBStorage:
     """Database Storage"""
+    class_db = {
+        'Amenity': Amenity,
+        'City': City,
+        'Place': Place,
+        'State': State,
+        'Review': Review,
+        'User': User
+    }
     __engine = None
     __session = None
 

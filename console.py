@@ -16,20 +16,18 @@ from models.city import City
 from models.amenity import Amenity
 from models.review import Review
 
-classes = {
-    'BaseModel': BaseModel,
-    'User': User,
-    'Place': Place,
-    'State': State,
-    'City': City,
-    'Amenity': Amenity,
-    'Review': Review
-}
-
 
 class HBNBCommand(cmd.Cmd):
     """the HBNB console"""
-
+    classes = {
+        'BaseModel': BaseModel,
+        'User': User,
+        'Place': Place,
+        'State': State,
+        'City': City,
+        'Amenity': Amenity,
+        'Review': Review
+    }
     # determines prompt for interactive/non-interactive modes
     prompt = '(hbnb) ' if sys.__stdin__.isatty() else ''
     dot_cmds = ['all', 'count', 'show', 'destroy', 'update']
