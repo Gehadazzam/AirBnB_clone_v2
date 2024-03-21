@@ -1,13 +1,12 @@
 #!/usr/bin/python3
 """ Console Module """
-
 import cmd
-import sys
+from datetime import datetime
 import re
 import os
-from os import getenv
-from datetime import datetime
+import sys
 import uuid
+
 from models.base_model import BaseModel
 from models import storage
 from models.user import User
@@ -20,26 +19,20 @@ from models.review import Review
 
 class HBNBCommand(cmd.Cmd):
     """ Contains the functionality for the HBNB console"""
-    classes = {
-               'BaseModel': BaseModel,
-               'User': User,
-               'Place': Place,
-               'State': State,
-               'City': City,
-               'Amenity': Amenity,
-               'Review': Review
-              }
+
     # determines prompt for interactive/non-interactive modes
     prompt = '(hbnb) ' if sys.__stdin__.isatty() else ''
-    dot_cmds = ['all', 'count', 'show', 'destroy', 'update']
 
+    classes = {
+               'BaseModel': BaseModel, 'User': User, 'Place': Place,
+               'State': State, 'City': City, 'Amenity': Amenity,
+               'Review': Review
+              }
+    dot_cmds = ['all', 'count', 'show', 'destroy', 'update']
     types = {
-             'number_rooms': int,
-             'number_bathrooms': int,
-             'max_guest': int,
-             'price_by_night': int,
-             'latitude': float,
-             'longitude': float
+             'number_rooms': int, 'number_bathrooms': int,
+             'max_guest': int, 'price_by_night': int,
+             'latitude': float, 'longitude': float
             }
 
     def preloop(self):
@@ -114,7 +107,6 @@ class HBNBCommand(cmd.Cmd):
 
     def do_EOF(self, arg):
         """ Handles EOF to exit program """
-        print()
         exit(0)
 
     def help_EOF(self):
@@ -123,30 +115,30 @@ class HBNBCommand(cmd.Cmd):
 
     def emptyline(self):
         """ Overrides the emptyline method of CMD """
-        pass
+        return False
 
     def do_create(self, args):
         """ Create an object of any class"""
         ignored_attrs = ('id', 'created_at', 'updated_at', '__class__')
         class_name = ''
-        name_pat = r'(?P<name>(?:[a-zA-Z]|_)(?:[a-zA-Z]|\d|_)*)'
-        class_match = re.match(name_pat, args)
+        name_pattern = r'(?P<name>(?:[a-zA-Z]|_)(?:[a-zA-Z]|\d|_)*)'
+        class_match = re.match(name_pattern, args)
         obj_kwargs = {}
         if class_match is not None:
             class_name = class_match.group('name')
             params_str = args[len(class_name):].strip()
             params = params_str.split(' ')
-            str_pat = r'(?P<t_str>"([^"]|\")*")'
-            float_pat = r'(?P<t_float>[-+]?\d+\.\d+)'
-            int_pat = r'(?P<t_int>[-+]?\d+)'
-            param_pat = '{}=({}|{}|{})'.format(
-                name_pat,
-                str_pat,
-                float_pat,
-                int_pat
+            str_pattern = r'(?P<t_str>"([^"]|\")*")'
+            float_pattern = r'(?P<t_float>[-+]?\d+\.\d+)'
+            int_pattern = r'(?P<t_int>[-+]?\d+)'
+            param_pattern = '{}=({}|{}|{})'.format(
+                name_pattern,
+                str_pattern,
+                float_pattern,
+                int_pattern
             )
             for param in params:
-                param_match = re.fullmatch(param_pat, param)
+                param_match = re.fullmatch(param_pattern, param)
                 if param_match is not None:
                     key_name = param_match.group('name')
                     str_v = param_match.group('t_str')
