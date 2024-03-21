@@ -4,9 +4,8 @@ import cmd
 import sys
 import re
 import os
-import uuid
-from os import getenv
 from datetime import datetime
+import uuid
 from models.base_model import BaseModel
 from models import storage
 from models.user import User
@@ -18,18 +17,16 @@ from models.review import Review
 
 
 class HBNBCommand(cmd.Cmd):
-    """the HBNB console"""
-    classes = {
-        'BaseModel': BaseModel,
-        'User': User,
-        'Place': Place,
-        'State': State,
-        'City': City,
-        'Amenity': Amenity,
-        'Review': Review
-    }
+    """ Contains the functionality for the HBNB console"""
+
     # determines prompt for interactive/non-interactive modes
     prompt = '(hbnb) ' if sys.__stdin__.isatty() else ''
+
+    classes = {
+               'BaseModel': BaseModel, 'User': User, 'Place': Place,
+               'State': State, 'City': City, 'Amenity': Amenity,
+               'Review': Review
+              }
     dot_cmds = ['all', 'count', 'show', 'destroy', 'update']
     types = {
              'number_rooms': int, 'number_bathrooms': int,
@@ -122,23 +119,23 @@ class HBNBCommand(cmd.Cmd):
 
     def do_create(self, args):
         """ Create an object of any class"""
-        object_attrs = ('id', 'created_at', 'updated_at', '__class__')
+        ignored_attrs = ('id', 'created_at', 'updated_at', '__class__')
         class_name = ''
-        name_pat = r'(?P<name>(?:[a-zA-Z]|_)(?:[a-zA-Z]|\d|_)*)'
-        class_match = re.match(name_pat, args)
-        kwargs_obj = {}
+        name_pattern = r'(?P<name>(?:[a-zA-Z]|_)(?:[a-zA-Z]|\d|_)*)'
+        class_match = re.match(name_pattern, args)
+        obj_kwargs = {}
         if class_match is not None:
             class_name = class_match.group('name')
             params_str = args[len(class_name):].strip()
             params = params_str.split(' ')
-            str_pat = r'(?P<t_str>"([^"]|\")*")'
-            float_pat = r'(?P<t_float>[-+]?\d+\.\d+)'
-            int_pat = r'(?P<t_int>[-+]?\d+)'
+            str_pattern = r'(?P<t_str>"([^"]|\")*")'
+            float_pattern = r'(?P<t_float>[-+]?\d+\.\d+)'
+            int_pattern = r'(?P<t_int>[-+]?\d+)'
             param_pattern = '{}=({}|{}|{})'.format(
-                name_pat,
-                str_pat,
-                float_pat,
-                int_pat
+                name_pattern,
+                str_pattern,
+                float_pattern,
+                int_pattern
             )
             for param in params:
                 param_match = re.fullmatch(param_pattern, param)
@@ -148,11 +145,11 @@ class HBNBCommand(cmd.Cmd):
                     float_v = param_match.group('t_float')
                     int_v = param_match.group('t_int')
                     if float_v is not None:
-                        kwargs_obj[key_name] = float(float_v)
+                        obj_kwargs[key_name] = float(float_v)
                     if int_v is not None:
-                        kwargs_obj[key_name] = int(int_v)
+                        obj_kwargs[key_name] = int(int_v)
                     if str_v is not None:
-                        kwargs_obj[key_name] = str_v[1:-1].replace('_', ' ')
+                        obj_kwargs[key_name] = str_v[1:-1].replace('_', ' ')
         else:
             class_name = args
         if not class_name:
@@ -162,19 +159,19 @@ class HBNBCommand(cmd.Cmd):
             print("** class doesn't exist **")
             return
         if os.getenv('HBNB_TYPE_STORAGE') == 'db':
-            if not hasattr(kwargs_obj, 'id'):
-                kwargs_obj['id'] = str(uuid.uuid4())
-            if not hasattr(kwargs_obj, 'created_at'):
-                kwargs_obj['created_at'] = str(datetime.now())
-            if not hasattr(kwargs_obj, 'updated_at'):
-                kwargs_obj['updated_at'] = str(datetime.now())
-            new_instance = HBNBCommand.classes[class_name](**kwargs_obj)
+            if not hasattr(obj_kwargs, 'id'):
+                obj_kwargs['id'] = str(uuid.uuid4())
+            if not hasattr(obj_kwargs, 'created_at'):
+                obj_kwargs['created_at'] = str(datetime.now())
+            if not hasattr(obj_kwargs, 'updated_at'):
+                obj_kwargs['updated_at'] = str(datetime.now())
+            new_instance = HBNBCommand.classes[class_name](**obj_kwargs)
             new_instance.save()
             print(new_instance.id)
         else:
             new_instance = HBNBCommand.classes[class_name]()
-            for key, value in kwargs_obj.items():
-                if key not in object_attrs:
+            for key, value in obj_kwargs.items():
+                if key not in ignored_attrs:
                     setattr(new_instance, key, value)
             new_instance.save()
             print(new_instance.id)
