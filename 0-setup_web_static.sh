@@ -20,7 +20,7 @@ echo "Hello kitty! How are you.xoxox" > /data/web_static/releases/test/index.htm
 sudo ln -sf /data/web_static/releases/test/ /data/web_static/current
 
 #Give ownership of the /data/ folder to the ubuntu user AND group
-sudo chown -R ubuntu:ubuntu /data/
+chown -R ubuntu:ubuntu /data/
 
 #Update the Nginx configuration to serve the content
 my_ali="location /hbnb_static/ {\
