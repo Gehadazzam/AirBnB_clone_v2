@@ -25,7 +25,7 @@ my_ali="location /hbnb_static/ {\
         alias /data/web_static/current/;\
     }\
 "
-sudo sed -i '/listen 80 default_server/a '"$my_ali" "$/etc/nginx/sites-available/default"
+sudo sed -i '/listen 80 default_server/a '"$my_ali" "/etc/nginx/sites-available/default"
 
 #Don’t forget to restart Nginx after updating the configuration: 
 sudo service nginx restart
