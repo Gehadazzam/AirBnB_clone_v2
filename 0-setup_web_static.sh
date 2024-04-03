@@ -3,9 +3,7 @@
 
 #install nginx if not exist
 sudo apt-get update -y
-if ! [ -x "$(command -v nginx)" ]; then
-    sudo apt-get install -y nginx
-fi
+sudo apt-get install -y nginx
 
 #Create the folder /data/web_static/shared/ if it doesn’t already exist
 sudo mkdir -p /data/web_static/shared/
@@ -14,7 +12,7 @@ sudo mkdir -p /data/web_static/shared/
 sudo mkdir -p /data/web_static/releases/test/
 
 #Create a fake HTML file /data/web_static/releases/test/index.html
-echo "Hello kitty! How are you.xoxox" > /data/web_static/releases/test/index.html
+echo "Hello kitty! How are you.xoxox" | sudo tee /data/web_static/releases/test/index.html
 
 #Create a symbolic link /data/web_static/current
 sudo ln -sf /data/web_static/releases/test/ /data/web_static/current
