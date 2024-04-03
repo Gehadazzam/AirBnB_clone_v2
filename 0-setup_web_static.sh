@@ -3,8 +3,9 @@
 
 #install nginx if not exist
 sudo apt-get update -y
-sudo apt-get install nginx -y
-sudo ufw allow 'Nginx HTTP'
+if ! [ -x "$(command -v nginx)" ]; then
+    sudo apt-get install -y nginx
+fi
 
 #Create the folder /data/web_static/shared/ if it doesn’t already exist
 sudo mkdir -p /data/web_static/shared/
