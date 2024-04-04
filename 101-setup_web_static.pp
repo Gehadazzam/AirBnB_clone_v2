@@ -17,11 +17,7 @@ exec {'redirect':
     command  => 'sed -i "24i\	rewrite ^/redirect https://www.youtube.com/watch?v=QH2-TGUlwu4 permanent;" /etc/nginx/sites-available/default',
     provider => 'shell'
 }
--> file_line { 'add_custom_header':
-    path  => '/etc/nginx/nginx.conf',
-    match => 'http {',
-    line  => "http {\n\tadd_header X-Served-By \"${hostname}\";",
-}
+
 service {'nginx':
     ensure  => running,
     require => Package['nginx']
