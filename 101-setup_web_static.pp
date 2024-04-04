@@ -54,3 +54,6 @@ exec { 'chown -R ubuntu:ubuntu /data/':
   path => '/usr/bin/:/usr/local/bin/:/bin/'
 }
 
+exec { 'nginx restart':
+  path => '/etc/init.d/'
+}
