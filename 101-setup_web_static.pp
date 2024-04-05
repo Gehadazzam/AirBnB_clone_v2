@@ -1,92 +1,96 @@
-#  we’d like you to install and configure an Nginx server using Puppet instead of Bash
-# Update system before installing nginx
-exec { 'install_system':
-    command => '/usr/bin/apt-get update',
-}
+# Redo the task #0 but by using Puppet:
 
-# Install Nginx
+$nginx_conf = "server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    add_header X-Served-By ${hostname};
+    root   /var/www/html;
+    index  index.html index.htm;
+    location /hbnb_static {
+        alias /data/web_static/current;
+        index index.html index.htm;
+    }
+    location /redirect_me {
+        return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;
+    }
+    error_page 404 /404.html;
+    location /404 {
+      root /var/www/html;
+      internal;
+    }
+}"
+
+# Install Nginx package
 package { 'nginx':
-    ensure  => 'installed',
-    require => Exec['install_system']
+  ensure   => 'present',
+  provider => 'apt'
 }
 
-# Ensure Nginx service is running
-service {'nginx':
-    ensure  => running,
-    require => Package['nginx']
-}
-
-# Create necessary directories
-file { '/data':
+# Ensure directory structure for web_static
+-> file { '/data':
   ensure  => 'directory'
-} ->
+}
 
-file { '/data/web_static':
+-> file { '/data/web_static':
   ensure => 'directory'
-} ->
+}
 
-file { '/data/web_static/releases':
+-> file { '/data/web_static/releases':
   ensure => 'directory'
-} ->
+}
 
-file { '/data/web_static/releases/test':
+-> file { '/data/web_static/releases/test':
   ensure => 'directory'
-} ->
+}
 
-file { '/data/web_static/shared':
+-> file { '/data/web_static/shared':
   ensure => 'directory'
-} ->
+}
 
-# Create index.html file for testing
-file { '/data/web_static/releases/test/index.html':
+# Create a sample index.html file for /data/web_static/releases/test/
+-> file { '/data/web_static/releases/test/index.html':
   ensure  => 'present',
-  content => "Hello kitty! How are you.xoxoxo\n"
-} ->
+  content => "webpage is found in data/web_static/releases/test/index.htm \n"
+}
 
-# Create a symbolic link to the test directory
-file { '/data/web_static/current':
+# Create a symbolic link /data/web_static/current
+-> file { '/data/web_static/current':
   ensure => 'link',
   target => '/data/web_static/releases/test'
-} ->
+}
 
-# Change ownership of /data directory
-exec { 'chown -R ubuntu:ubuntu /data/':
+# Change ownership of /data/ to ubuntu user and group
+-> exec { 'chown -R ubuntu:ubuntu /data/':
   path => '/usr/bin/:/usr/local/bin/:/bin/'
 }
 
-# Update Nginx configuration to serve content to hbnb_static
-file { '/etc/nginx/sites-available/kitty401984':
+# Ensure directory structure for /var/www/html
+file { '/var/www':
+  ensure => 'directory'
+}
+
+-> file { '/var/www/html':
+  ensure => 'directory'
+}
+
+# Create index.html and 404.html in /var/www/html
+-> file { '/var/www/html/index.html':
   ensure  => 'present',
-  content => "
-    server {
-        listen 80;
-        server_name kitty401984;
-
-        location / {
-            root /data/web_static/current/;
-            index index.html index.htm;
-        }
-
-        location /hbnb_static/ {
-            alias /data/web_static/current/;
-            index index.html index.htm;
-        }
-    }
-  ",
-  require => Package['nginx'],
-  notify  => Exec['nginx_run'],
+  content => "upload in /var/www/index.html***\n"
 }
 
-# Enable the new site by creating a symbolic link
-file { '/etc/nginx/sites-enabled/kitty401984':
-  ensure  => 'link',
-  target  => '/etc/nginx/sites-available/kitty401984',
-  require => File['/etc/nginx/sites-available/kitty401984'],
-  notify  => Exec['nginx_run'],
+-> file { '/var/www/html/404.html':
+  ensure  => 'present',
+  content => "Ceci n'est pas une page\n"
 }
 
-# Restart Nginx service after updating the configuration
-exec {'nginx_run':
-    command => '/usr/sbin/service nginx restart',
-    refreshonly => true,
+# Update Nginx configuration with $nginx_conf
+-> file { '/etc/nginx/sites-available/default':
+  ensure  => 'present',
+  content => $nginx_conf
+}
+
+# Restart Nginx service
+-> exec { 'nginx restart':
+  path => '/etc/init.d/'
 }
