@@ -13,13 +13,14 @@ def do_clean(number=0):
     """clean data"""
 
     number = 1 if int(number) == 0 else int(number)
+
     arc = sorted(os.listdir("versions"))
-    [arc.pop for n in range(number)]
+    [arc.pop() for n in range(number)]
     with lcd("versions"):
-        [local("rm ./{}".format(n)) for n in arc]
+        [local("rm ./{}".format(i)) for i in arc]
 
     with cd("/data/web_static/releases"):
         arc = run("ls -tr").split()
-        arc = [num for num in arc if "web_static_" in arc]
+        arc = [n for n in arc if "web_static_" in n]
         [arc.pop() for n in range(number)]
         [run("rm -rf ./{}".format(n)) for n in arc]
