@@ -8,7 +8,7 @@ from flask import Flask as F
 app = F(__name__)
 
 
-@app.route("/")
+@app.route("/", strict_slashes=False)
 def hello():
     """print the massage"""
 
